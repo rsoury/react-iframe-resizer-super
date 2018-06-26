@@ -4,10 +4,10 @@
  * https://github.com/davidjbradshaw/iframe-resizer
  *
  */
-import React from 'react';
-import PropTypes from 'prop-types';
-import ReactDOM from 'react-dom';
-import { iframeResizer as iframeResizerLib } from 'iframe-resizer';
+import React from "react";
+import PropTypes from "prop-types";
+import ReactDOM from "react-dom";
+import { iframeResizer as iframeResizerLib } from "iframe-resizer";
 
 class IframeResizer extends React.Component {
   componentDidMount() {
@@ -20,7 +20,7 @@ class IframeResizer extends React.Component {
     this.updateIframe(nextProps);
     this.resizeIframe(nextProps);
   }
-  updateIframe = (props) => {
+  updateIframe = props => {
     // has src - no injected content
     if (props.src) return;
     // do we have content to inject (content or children)
@@ -37,8 +37,18 @@ class IframeResizer extends React.Component {
     // or injecting HTML `content` vs. loading via `src`
     const doc = frame.contentDocument;
     if (!doc) return;
+
+    // Establish initial document before mounting primary content.
+    const initialContent = props.initialContent;
+    if (initialContent ? typeof initialContent === "string" : false) {
+      // This can be used to establish some content in the <head /> or <body /> prior to content injection.
+      doc.open();
+      doc.write(initialContent);
+      doc.close();
+    }
+
     // replace iframe document content
-    if (typeof content === 'string') {
+    if (typeof content === "string") {
       // assume this is a HTML block
       //   we could send this in via REACT dangerously set HTML
       //   but we are in an iframe anyway, already a red-headed step-child.
@@ -50,9 +60,9 @@ class IframeResizer extends React.Component {
       doc.open();
       doc.write('<div id="iframe-root"></div>');
       doc.close();
-      ReactDOM.render(content, doc.getElementById('iframe-root'))
+      ReactDOM.render(content, doc.getElementById("iframe-root"));
     }
-  }
+  };
   // inject the iframe resizer "content window" script
   injectIframeResizerUrl = () => {
     if (!this.props.iframeResizerUrl) return;
@@ -68,33 +78,33 @@ class IframeResizer extends React.Component {
     if (!doc) return;
     // where can we insert into? (fail into whatever we can find)
     let injectTarget = null;
-    ['head', 'HEAD', 'body', 'BODY', 'div', 'DIV'].forEach(tagName => {
+    ["head", "HEAD", "body", "BODY", "div", "DIV"].forEach(tagName => {
       if (injectTarget) return;
       const found = doc.getElementsByTagName(tagName);
       if (!(found && found.length)) return;
       injectTarget = found[0];
     });
     if (!injectTarget) {
-      console.error('Unable to inject iframe resizer script');
+      console.error("Unable to inject iframe resizer script");
       return;
     }
-    const resizerScriptElement = document.createElement('script');
-    resizerScriptElement.type = 'text/javascript';
+    const resizerScriptElement = document.createElement("script");
+    resizerScriptElement.type = "text/javascript";
     resizerScriptElement.src = this.props.iframeResizerUrl;
     injectTarget.appendChild(resizerScriptElement);
-  }
+  };
   onLoad = () => {
     this.injectIframeResizerUrl();
     // DISABLED because it's causing a loading loop :(
     // if (this.props.onIframeLoaded) this.props.onIframeLoaded();
-  }
-  resizeIframe = (props) => {
+  };
+  resizeIframe = props => {
     const frame = this.refs.frame;
     if (!frame) return;
     if (props.iframeResizerEnable) {
       iframeResizerLib(props.iframeResizerOptions, frame);
     }
-  }
+  };
   render() {
     const { src, id, frameBorder, className, style } = this.props;
     return (
@@ -113,10 +123,8 @@ class IframeResizer extends React.Component {
 IframeResizer.propTypes = {
   // iframe content/document
   // option 1. content of HTML to load in the iframe
-  content: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.element,
-  ]),
+  content: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
+  initialContent: PropTypes.string,
   // option 2. src to a URL to load in the iframe
   src: PropTypes.string,
   // iframe-resizer controls and helpers
@@ -124,13 +132,13 @@ IframeResizer.propTypes = {
   iframeResizerOptions: PropTypes.object,
   iframeResizerUrl: PropTypes.oneOfType([
     PropTypes.string, // URL to inject
-    PropTypes.bool, // false = disable inject
+    PropTypes.bool // false = disable inject
   ]),
   // misc props to pass through to iframe
   id: PropTypes.string,
   frameBorder: PropTypes.number,
   className: PropTypes.string,
-  style: PropTypes.object,
+  style: PropTypes.object
   // optional extra callback when iframe is loaded
   // onIframeLoaded: PropTypes.func,
 };
@@ -146,13 +154,14 @@ IframeResizer.defaultProps = {
     // initCallback: () => { console.log('ready!'); },
     // resizedCallback: () => { console.log('resized!'); },
   },
-  iframeResizerUrl: 'https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/3.5.8/iframeResizer.contentWindow.min.js',
+  iframeResizerUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/3.5.8/iframeResizer.contentWindow.min.js",
   // misc props to pass through to iframe
   frameBorder: 0,
   style: {
-    width: '100%',
-    minHeight: 20,
-  },
+    width: "100%",
+    minHeight: 20
+  }
 };
 
 export default IframeResizer;
